@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 class Process {
-    int pid, burstTime, arrivalTime, waitingTime, turnaroundTime;
+    int pid, burstTime, arrivalTime, waitingTime, turnaroundTime, completionTime;
 
     public Process(int pid, int burstTime, int arrivalTime) {
         this.pid = pid;
@@ -36,32 +36,59 @@ public class FCFS {
             }
         }
 
-        // Calculate waiting time and turnaround time
-        int totalTime = 0, totalWT = 0, totalTAT = 0;
+        int currentTime = 0;
+        float totalWT = 0, totalTAT = 0;
 
+        // Calculate CT, TAT, WT
         for (Process p : processes) {
-            p.waitingTime = totalTime - p.arrivalTime;
-            totalTime += p.burstTime;
-            p.turnaroundTime = p.waitingTime + p.burstTime;
+            if (currentTime < p.arrivalTime) {
+                currentTime = p.arrivalTime; // CPU idle till process arrives
+            }
+            p.completionTime = currentTime + p.burstTime;
+            p.turnaroundTime = p.completionTime - p.arrivalTime;
+            p.waitingTime = p.turnaroundTime - p.burstTime;
+
             totalWT += p.waitingTime;
             totalTAT += p.turnaroundTime;
+
+            currentTime = p.completionTime;
         }
 
         // Print Gantt Chart
-        System.out.println("Gantt Chart: ");
+        System.out.println("\nGantt Chart:");
+        System.out.print(" ");
         for (Process p : processes) {
-            System.out.print("P" + p.pid + " ");
+            System.out.print("-------");
+        }
+        System.out.println();
+        System.out.print("|");
+        for (Process p : processes) {
+            System.out.print("  P" + p.pid + "  |");
+        }
+        System.out.println();
+        System.out.print(" ");
+        for (Process p : processes) {
+            System.out.print("-------");
+        }
+        System.out.println();
+
+        // Print time line
+        System.out.print("0");
+        for (Process p : processes) {
+            System.out.printf("%7d", p.completionTime);
         }
         System.out.println("\n");
 
         // Print process details
-        System.out.println("Process\tArrival\tBurst\tWaiting\tTurnaround");
+        System.out.println("Process\tAT\tBT\tCT\tTAT\tWT");
         for (Process p : processes) {
-            System.out.println("P" + p.pid + "\t" + p.arrivalTime + "\t" + p.burstTime + "\t" + p.waitingTime + "\t" + p.turnaroundTime);
+            System.out.println("P" + p.pid + "\t" + p.arrivalTime + "\t" + p.burstTime + "\t" +
+                    p.completionTime + "\t" + p.turnaroundTime + "\t" + p.waitingTime);
         }
 
-        System.out.println("Average Waiting Time: " + (totalWT / (float) n));
-        System.out.println("Average Turnaround Time: " + (totalTAT / (float) n));
+        // Print averages
+        System.out.printf("\nAverage Waiting Time: %.2f", (totalWT / n));
+        System.out.printf("\nAverage Turnaround Time: %.2f\n", (totalTAT / n));
 
         sc.close();
     }
