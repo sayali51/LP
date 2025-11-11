@@ -1,10 +1,10 @@
-// Round Robin CPU Scheduling (Preemptive)
-
+// Round Robin CPU Scheduling (Preemptive) with Gantt Chart
 import java.util.*;
 
-class RoundRobin {
+public class RoundRobin {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
+
         System.out.print("Enter number of processes: ");
         int n = sc.nextInt();
 
@@ -17,6 +17,7 @@ class RoundRobin {
         int wt[] = new int[n];
         boolean visited[] = new boolean[n];
 
+        // Input Arrival and Burst Times
         for (int i = 0; i < n; i++) {
             System.out.print("Enter Arrival Time and Burst Time for process " + (i + 1) + ": ");
             pid[i] = i + 1;
@@ -31,9 +32,17 @@ class RoundRobin {
         Queue<Integer> q = new LinkedList<>();
         int time = 0;
         int completed = 0;
+        StringBuilder ganttChart = new StringBuilder();
+        List<Integer> timeLine = new ArrayList<>();
 
+        // Sort processes by arrival time for consistency
+        Integer[] order = new Integer[n];
+        for (int i = 0; i < n; i++) order[i] = i;
+        Arrays.sort(order, Comparator.comparingInt(i -> at[i]));
+
+        // Start scheduling
         while (completed != n) {
-            // Add all processes that have arrived till current time
+            // Add newly arrived processes
             for (int i = 0; i < n; i++) {
                 if (at[i] <= time && !visited[i]) {
                     q.add(i);
@@ -42,16 +51,22 @@ class RoundRobin {
             }
 
             if (q.isEmpty()) {
+                ganttChart.append("idle ");
+                timeLine.add(time);
                 time++;
                 continue;
             }
 
             int idx = q.poll();
             int exec = Math.min(rt[idx], quantum);
+
+            ganttChart.append("P").append(pid[idx]).append(" ");
+            timeLine.add(time);
+
             rt[idx] -= exec;
             time += exec;
 
-            // Add newly arrived processes during execution
+            // Add any newly arrived processes during this execution window
             for (int i = 0; i < n; i++) {
                 if (at[i] <= time && !visited[i]) {
                     q.add(i);
@@ -69,11 +84,43 @@ class RoundRobin {
             }
         }
 
-        // Output
-        System.out.println("\nPID\tAT\tBT\tCT\tTAT\tWT");
-        for (int i = 0; i < n; i++) {
-            System.out.println(pid[i] + "\t" + at[i] + "\t" + bt[i] + "\t" + ct[i] + "\t" + tat[i] + "\t" + wt[i]);
+        timeLine.add(time);
+
+        // Print Gantt Chart
+        System.out.println("\nGantt Chart:");
+        System.out.print(" ");
+        for (int i = 0; i < ganttChart.toString().trim().split(" ").length; i++) {
+            System.out.print("-------");
         }
+        System.out.println();
+        System.out.print("|");
+        for (String s : ganttChart.toString().trim().split(" ")) {
+            System.out.printf(" %-5s|", s);
+        }
+        System.out.println();
+        System.out.print(" ");
+        for (int i = 0; i < ganttChart.toString().trim().split(" ").length; i++) {
+            System.out.print("-------");
+        }
+        System.out.println();
+
+        for (int t : timeLine) {
+            System.out.printf("%-7d", t);
+        }
+        System.out.println("\n");
+
+        // Output Table
+        System.out.println("PID\tAT\tBT\tCT\tTAT\tWT");
+        float avgWT = 0, avgTAT = 0;
+        for (int i = 0; i < n; i++) {
+            avgWT += wt[i];
+            avgTAT += tat[i];
+            System.out.println("P" + pid[i] + "\t" + at[i] + "\t" + bt[i] + "\t" + ct[i] + "\t" + tat[i] + "\t" + wt[i]);
+        }
+
+        System.out.printf("\nAverage Waiting Time: %.2f\n", avgWT / n);
+        System.out.printf("Average Turnaround Time: %.2f\n", avgTAT / n);
+
+        sc.close();
     }
 }
- 
