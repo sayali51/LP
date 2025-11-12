@@ -1,0 +1,105 @@
+import java.util.*;
+
+public class SJFNonPreemptive {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Input: Number of processes
+        System.out.print("Enter the number of processes: ");
+        int n = sc.nextInt();
+
+        int[] bt = new int[n];        // Burst Time
+        int[] at = new int[n];        // Arrival Time
+        int[] wt = new int[n];        // Waiting Time
+        int[] tat = new int[n];       // Turnaround Time
+        int[] ct = new int[n];        // Completion Time
+        boolean[] completed = new boolean[n]; // Completion flag
+
+        // Input: Arrival Time and Burst Time for each process
+        System.out.println("Enter Arrival Time and Burst Time of the processes:");
+        for (int i = 0; i < n; i++) {
+            System.out.print("P" + (i + 1) + ": ");
+            at[i] = sc.nextInt();
+            bt[i] = sc.nextInt();
+        }
+
+        int currentTime = 0, completedProcesses = 0;
+        float avgWT = 0, avgTAT = 0;
+        StringBuilder ganttChart = new StringBuilder();
+        List<Integer> timeLine = new ArrayList<>();
+
+        while (completedProcesses < n) {
+            int shortest = -1;
+            int minBT = Integer.MAX_VALUE;
+
+            // Find process with the smallest burst time among arrived and not completed
+            for (int i = 0; i < n; i++) {
+                if (!completed[i] && at[i] <= currentTime && bt[i] < minBT) {
+                    minBT = bt[i];
+                    shortest = i;
+                }
+            }
+
+            if (shortest != -1) {
+                // Process found → execute completely (non-preemptive)
+                ganttChart.append("P").append(shortest + 1).append(" ");
+                timeLine.add(currentTime);
+
+                currentTime += bt[shortest];
+                ct[shortest] = currentTime;
+                tat[shortest] = ct[shortest] - at[shortest];
+                wt[shortest] = tat[shortest] - bt[shortest];
+                completed[shortest] = true;
+                completedProcesses++;
+
+                avgWT += wt[shortest];
+                avgTAT += tat[shortest];
+            } else {
+                // CPU idle
+                ganttChart.append("idle ");
+                timeLine.add(currentTime);
+                currentTime++;
+            }
+        }
+
+        timeLine.add(currentTime);
+
+        // Print Gantt Chart
+        System.out.println("\nGantt Chart:");
+        System.out.print(" ");
+        String[] chartLabels = ganttChart.toString().trim().split(" ");
+        for (int i = 0; i < chartLabels.length; i++) {
+            System.out.print("-------");
+        }
+        System.out.println();
+
+        System.out.print("|");
+        for (String label : chartLabels) {
+            System.out.printf(" %-5s|", label);
+        }
+        System.out.println();
+
+        System.out.print(" ");
+        for (int i = 0; i < chartLabels.length; i++) {
+            System.out.print("-------");
+        }
+        System.out.println();
+
+        for (int t : timeLine) {
+            System.out.printf("%-7d", t);
+        }
+        System.out.println("\n");
+
+        // Process Table Output
+        System.out.println("Process\tAT\tBT\tCT\tTAT\tWT");
+        for (int i = 0; i < n; i++) {
+            System.out.println("P" + (i + 1) + "\t" + at[i] + "\t" + bt[i] + "\t" +
+                    ct[i] + "\t" + tat[i] + "\t" + wt[i]);
+        }
+
+        System.out.printf("\nAverage Waiting Time: %.2f\n", avgWT / n);
+        System.out.printf("Average Turnaround Time: %.2f\n", avgTAT / n);
+
+        sc.close();
+    }
+}
